@@ -11,7 +11,7 @@ class Bot():
         self.password = 'frenchfri'
         self.images = []
 
-    def init_directory():
+    def init_directory(self):
         if not os.path.isdir('./images'):
             os.mkdir('./images')
 
@@ -42,7 +42,7 @@ class Bot():
 
     def download_images(self):
         for url in self.images:
-            id = url[url.find('.jpg') - 47:url.find('.jpg')]
+            id = url[url.find('x640') + 5:url.find('.jpg') - 2]
             print(id)
             if self.find(id):
                 continue
@@ -60,5 +60,6 @@ class Bot():
         return False
 
 bot = Bot()
+bot.init_directory()
 bot.load_hyperlinks()
 bot.download_images()
