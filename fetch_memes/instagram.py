@@ -5,19 +5,19 @@ import os
 import time
 import requests
 
-class Bot():
-    def __init__(self):
-        self.username = 'mustardmayonaiseketchup'
-        self.password = 'frenchfri'
-        self.images = []
+class Instagram_Bot():
+    def __init__(self, username, password):
+        self.username = username
+        self.password = password
 
     def init_directory(self):
         if not os.path.isdir('./images'):
             os.mkdir('./images')
 
     def load_hyperlinks(self):
-        chrome_options = webdriver.ChromeOptions()
-        chrome_options.add_experimental_option("detach", True)
+        # For testing functionality
+        # chrome_options = webdriver.ChromeOptions()
+        # chrome_options.add_experimental_option("detach", True)
 
         driver = webdriver.Chrome('D:/Vince/Documents/chromedriver.exe')
         driver.get('https://www.instagram.com/accounts/login/')
@@ -29,27 +29,39 @@ class Bot():
         passwordInput.send_keys(self.password)
         passwordInput.send_keys(Keys.ENTER)
 
-        time.sleep(1.5)
+        time.sleep(2)
         notification = driver.find_elements_by_css_selector('div[role="presentation"] button')[1]
         notification.click()
 
-        time.sleep(1.5)
-        for img in driver.find_elements_by_css_selector('article img'):
-            if img.get_attribute('alt').find('photo') != -1 or img.get_attribute('alt').find('Image') != -1:
-                srcset = img.get_attribute('srcset')
-                self.images.append(srcset[:srcset.find('640w') - 1])
-                print(srcset[:srcset.find('640w')])
+        time.sleep(1)
+        images = driver.find_elements_by_css_selector('article img')
+        self.loop_through_images(images)
+        driver.quit()
 
-    def download_images(self):
-        for url in self.images:
-            id = url[url.find('x640') + 5:url.find('.jpg') - 2]
-            print(id)
-            if self.find(id):
-                continue
-            response = requests.get(url, stream=True)
-            with open('./images/' + id + '.jpg', 'wb') as out_file:
-                shutil.copyfileobj(response.raw, out_file)
-            del response
+    def loop_through_images(self, images):
+        for img in images:
+            if (
+                (
+                    img.get_attribute('alt').find('Image') != -1
+                    or img.get_attribute('alt').find('photo') != -1
+                )
+                and img.get_attribute('srcset').find('1080w') != -1
+            ):
+                url = img.get_attribute('src')
+                if self.download_image(url) == False:
+                    return False
+        return True
+
+    def download_image(self, url):
+        id = url[url.find('vp/') + 3:url.find('/t51') - 9]
+        if self.find(id):
+            return False
+        print(id)
+        response = requests.get(url, stream=True)
+        with open('./images/' + id + '.jpg', 'wb') as out_file:
+            shutil.copyfileobj(response.raw, out_file)
+        del response
+        return True
 
 
     def find(self, id):
@@ -59,7 +71,43 @@ class Bot():
 
         return False
 
-bot = Bot()
-bot.init_directory()
-bot.load_hyperlinks()
-bot.download_images()
+class Instagram_Page_Bot(Instagram_Bot):
+    def load_hyperlinks(self, account):
+        # For testing functionality
+        # chrome_options = webdriver.ChromeOptions()
+        # chrome_options.add_experimental_option("detach", True)
+
+        driver = webdriver.Chrome('D:/Vince/Documents/chromedriver.exe')
+        driver.get('https://www.instagram.com/accounts/login/')
+
+        time.sleep(1)
+        emailInput = driver.find_elements_by_css_selector('form input')[0]
+        passwordInput = driver.find_elements_by_css_selector('form input')[1]
+        emailInput.send_keys(self.username)
+        passwordInput.send_keys(self.password)
+        passwordInput.send_keys(Keys.ENTER)
+
+        time.sleep(2)
+        driver.get('https://www.instagram.com/' + account + '/?hl=en')
+
+        time.sleep(2)
+        driver.find_element_by_css_selector('article a').click()
+
+        while True:
+            time.sleep(1)
+            images = driver.find_elements_by_css_selector('article img')
+            if self.loop_through_images(images) == False:
+                break
+
+            time.sleep(1)
+            next = driver.find_element_by_xpath("//*[contains(text(), 'Next')]")
+            next.click()
+
+        driver.quit()
+
+# For testing functionality
+# bot = Instagram_Bot('mustardmayonaiseketchup', 'frenchfri')
+# bot.init_directory()
+# bot.load_hyperlinks()
+# bot = Instagram_Page_Bot('mustardmayonaiseketchup', 'frenchfri')
+# bot.load_hyperlinks('mustardmayonaiseketchup')
