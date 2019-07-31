@@ -15,6 +15,8 @@ class Reddit_Bot():
             os.mkdir('./images')
 
     def load_hyperlinks(self):
+        if not os.path.isdir('./temp_images'):
+            os.mkdir('./temp_images')
         chrome_options = webdriver.ChromeOptions()
         chrome_options.add_experimental_option('prefs', {'profile.default_content_setting_values.notifications' : 2})
 
@@ -32,14 +34,19 @@ class Reddit_Bot():
         passwordInput.send_keys(Keys.ENTER)
 
         time.sleep(5)
-        links = driver.find_elements_by_css_selector('a')
-        self.loop_through_links(links)
+        while True:
+            links = driver.find_elements_by_css_selector('a')
+            if self.loop_through_links(links) == False:
+                break
+            driver.execute_script("window.scrollTo(0, document.body.scrollHeight)");
+            time.sleep(5)
 
+        for img in os.listdir('temp_images'):
+            shutil.copyfile('temp_images/' + img, 'images/' + img)
         driver.quit()
 
     def loop_through_links(self, links):
         for link in links:
-            print(link.get_attribute('href'))
             if (link.get_attribute('href').find('https://www.reddit.com/r/') == 0
             ):
                 prevlink = link.get_attribute('href')
@@ -55,19 +62,22 @@ class Reddit_Bot():
         return True
 
     def download_image(self, url):
-        id = url[url.find('it/') + 3:url.find('?wi') - 3]
-        if self.find(id):
+        id = url[url.find('it/') + 3:url.find('?') - 4]
+        if self.find(id, 'images'):
             return False
-        print(id)
+
+        if self.find(id, 'temp_images'):
+            return True
+            
         response = requests.get(url, stream=True)
-        with open('./images/' + id + '.jpg', 'wb') as out_file:
+        with open('./temp_images/' + id + '.jpg', 'wb') as out_file:
             shutil.copyfileobj(response.raw, out_file)
         del response
         return True
 
 
-    def find(self, id):
-        for filename in os.listdir('images'):
+    def find(self, id, path):
+        for filename in os.listdir(path):
             if filename.startswith(id):
                 return True
 

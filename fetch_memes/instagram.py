@@ -15,8 +15,12 @@ class Instagram_Bot():
             os.mkdir('./images')
 
     def load_hyperlinks(self):
+        if not os.path.isdir('./temp_images'):
+            os.mkdir('./temp_images')
+
+        chrome_options = webdriver.ChromeOptions()
+        chrome_options.add_experimental_option('prefs', {'profile.default_content_setting_values.notifications' : 2})
         # For testing functionality
-        # chrome_options = webdriver.ChromeOptions()
         # chrome_options.add_experimental_option("detach", True)
 
         driver = webdriver.Chrome('D:/Vince/Documents/chromedriver.exe')
@@ -29,13 +33,21 @@ class Instagram_Bot():
         passwordInput.send_keys(self.password)
         passwordInput.send_keys(Keys.ENTER)
 
-        time.sleep(2)
+        time.sleep(3)
         notification = driver.find_elements_by_css_selector('div[role="presentation"] button')[1]
         notification.click()
 
         time.sleep(1)
-        images = driver.find_elements_by_css_selector('article img')
-        self.loop_through_images(images)
+        while True:
+            images = driver.find_elements_by_css_selector('article img')
+            if self.loop_through_images(images) == False:
+                break
+            driver.execute_script("window.scrollTo(0, document.body.scrollHeight)");
+            time.sleep(5)
+
+        for img in os.listdir('temp_images'):
+            shutil.copyfile('temp_images/' + img, 'images/' + img)
+
         driver.quit()
 
     def loop_through_images(self, images):
@@ -54,18 +66,19 @@ class Instagram_Bot():
 
     def download_image(self, url):
         id = url[url.find('vp/') + 3:url.find('/t51') - 9]
-        if self.find(id):
+        if self.find(id, 'images'):
             return False
-        print(id)
+        if self.find(id, 'temp_images'):
+            return True
+
         response = requests.get(url, stream=True)
-        with open('./images/' + id + '.jpg', 'wb') as out_file:
+        with open('./temp_images/' + id + '.jpg', 'wb') as out_file:
             shutil.copyfileobj(response.raw, out_file)
         del response
         return True
 
-
-    def find(self, id):
-        for filename in os.listdir('images'):
+    def find(self, id, path):
+        for filename in os.listdir(path):
             if filename.startswith(id):
                 return True
 
@@ -106,8 +119,8 @@ class Instagram_Page_Bot(Instagram_Bot):
         driver.quit()
 
 # For testing functionality
-# bot = Instagram_Bot('mustardmayonaiseketchup', 'frenchfri')
-# bot.init_directory()
-# bot.load_hyperlinks()
+bot = Instagram_Bot('mustardmayonaiseketchup', 'frenchfri')
+bot.init_directory()
+bot.load_hyperlinks()
 # bot = Instagram_Page_Bot('mustardmayonaiseketchup', 'frenchfri')
 # bot.load_hyperlinks('mustardmayonaiseketchup')
