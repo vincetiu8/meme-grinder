@@ -4,6 +4,8 @@ import shutil
 import os
 import time
 import requests
+from PIL import Image
+import imagehash
 
 class Reddit_Bot():
     def __init__(self, username, password):
@@ -17,6 +19,7 @@ class Reddit_Bot():
     def load_hyperlinks(self):
         if not os.path.isdir('./temp_images'):
             os.mkdir('./temp_images')
+
         chrome_options = webdriver.ChromeOptions()
         chrome_options.add_experimental_option('prefs', {'profile.default_content_setting_values.notifications' : 2})
 
@@ -62,16 +65,15 @@ class Reddit_Bot():
         return True
 
     def download_image(self, url):
-        id = url[url.find('it/') + 3:url.find('?') - 4]
-        if self.find(id, 'images'):
+        response = requests.get(url, stream = True)
+        i = Image.open(response.raw)
+        hash = str(imagehash.average_hash(i))
+        if self.find(hash, 'images'):
             return False
-
-        if self.find(id, 'temp_images'):
+        if self.find(hash, 'temp_images'):
             return True
-            
-        response = requests.get(url, stream=True)
-        with open('./temp_images/' + id + '.jpg', 'wb') as out_file:
-            shutil.copyfileobj(response.raw, out_file)
+
+        i.save('temp_images/' + hash + '.png')
         del response
         return True
 
@@ -84,6 +86,6 @@ class Reddit_Bot():
         return False
 
 # For testing functionality
-bot = Reddit_Bot('invincbot', 'frenchfri')
-bot.init_directory()
-bot.load_hyperlinks()
+# bot = Reddit_Bot('invincbot', 'frenchfri')
+# bot.init_directory()
+# bot.load_hyperlinks()

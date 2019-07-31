@@ -4,6 +4,8 @@ import shutil
 import os
 import time
 import requests
+from PIL import Image
+import imagehash
 
 class Instagram_Bot():
     def __init__(self, username, password):
@@ -65,15 +67,15 @@ class Instagram_Bot():
         return True
 
     def download_image(self, url):
-        id = url[url.find('vp/') + 3:url.find('/t51') - 9]
-        if self.find(id, 'images'):
+        response = requests.get(url, stream = True)
+        i = Image.open(response.raw)
+        hash = str(imagehash.average_hash(i))
+        if self.find(hash, 'images'):
             return False
-        if self.find(id, 'temp_images'):
+        if self.find(hash, 'temp_images'):
             return True
 
-        response = requests.get(url, stream=True)
-        with open('./temp_images/' + id + '.jpg', 'wb') as out_file:
-            shutil.copyfileobj(response.raw, out_file)
+        i.save('temp_images/' + hash + '.png')
         del response
         return True
 
@@ -119,8 +121,8 @@ class Instagram_Page_Bot(Instagram_Bot):
         driver.quit()
 
 # For testing functionality
-bot = Instagram_Bot('mustardmayonaiseketchup', 'frenchfri')
-bot.init_directory()
-bot.load_hyperlinks()
+# bot = Instagram_Bot('mustardmayonaiseketchup', 'frenchfri')
+# bot.init_directory()
+# bot.load_hyperlinks()
 # bot = Instagram_Page_Bot('mustardmayonaiseketchup', 'frenchfri')
 # bot.load_hyperlinks('mustardmayonaiseketchup')
