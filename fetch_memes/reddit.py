@@ -16,7 +16,7 @@ class Reddit_Bot():
         if not os.path.isdir('./images'):
             os.mkdir('./images')
 
-    def load_hyperlinks(self):
+    def load_hyperlinks(self, sub = ''):
         if not os.path.isdir('./temp_images'):
             os.mkdir('./temp_images')
 
@@ -35,6 +35,9 @@ class Reddit_Bot():
         emailInput.send_keys(self.username)
         passwordInput.send_keys(self.password)
         passwordInput.send_keys(Keys.ENTER)
+
+        time.sleep(5)
+        driver.get('https://www.reddit.com/' + sub + '/')
 
         time.sleep(5)
         while True:
@@ -88,4 +91,4 @@ class Reddit_Bot():
 # For testing functionality
 # bot = Reddit_Bot('invincbot', 'frenchfri')
 # bot.init_directory()
-# bot.load_hyperlinks()
+# bot.load_hyperlinks('r/dankmemes')
