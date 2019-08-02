@@ -25,7 +25,7 @@ class Instagram_Bot():
         # For testing functionality
         # chrome_options.add_experimental_option("detach", True)
 
-        driver = webdriver.Chrome('D:/Vince/Documents/chromedriver.exe')
+        driver = webdriver.Chrome('D:/Vince/Documents/chromedriver.exe', chrome_option = chrome_options)
         driver.get('https://www.instagram.com/accounts/login/')
 
         time.sleep(self.delay)
