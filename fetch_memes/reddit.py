@@ -13,11 +13,10 @@ class Reddit_Bot():
         self.password = password
         self.delay = delay
 
-    def init_directory(self):
+    def load_hyperlinks(self, sub = ''):
         if not os.path.isdir('./images'):
             os.mkdir('./images')
 
-    def load_hyperlinks(self, sub = ''):
         if not os.path.isdir('./temp_images'):
             os.mkdir('./temp_images')
 

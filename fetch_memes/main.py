@@ -9,7 +9,6 @@ import ctypes
 
 reddit_bot = Reddit_Bot('invincbot', 'frenchfri', 5)
 insta_bot = Instagram_Bot('mustardmayonaiseketchup', 'frenchfri', 5)
-reddit_bot.init_directory()
 
 def find(id, path):
     for filename in os.listdir(path):

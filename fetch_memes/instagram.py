@@ -13,11 +13,10 @@ class Instagram_Bot():
         self.password = password
         self.delay = delay
 
-    def init_directory(self):
+    def load_hyperlinks(self):
         if not os.path.isdir('./images'):
             os.mkdir('./images')
 
-    def load_hyperlinks(self):
         if not os.path.isdir('./temp_images'):
             os.mkdir('./temp_images')
 
@@ -54,6 +53,7 @@ class Instagram_Bot():
             shutil.rmtree('temp_images')
 
         driver.quit()
+
 
     def loop_through_images(self, images):
         for img in images:
