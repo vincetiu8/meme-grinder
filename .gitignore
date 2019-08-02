@@ -2,6 +2,9 @@
 fetch_memes/images
 fetch_memes/temp_images
 
+# Cache
+fetch_memes/__pycache__
+
 # Logs
 logs
 *.log

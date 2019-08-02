@@ -8,9 +8,10 @@ from PIL import Image
 import imagehash
 
 class Reddit_Bot():
-    def __init__(self, username, password):
+    def __init__(self, username, password, delay):
         self.username = username
         self.password = password
+        self.delay = delay
 
     def init_directory(self):
         if not os.path.isdir('./images'):
@@ -29,26 +30,30 @@ class Reddit_Bot():
         driver = webdriver.Chrome('D:/Vince/Documents/chromedriver.exe', chrome_options=chrome_options)
         driver.get('https://www.reddit.com/login/')
 
-        time.sleep(1.5)
+        time.sleep(self.delay)
         emailInput = driver.find_elements_by_css_selector('form fieldset input')[0]
         passwordInput = driver.find_elements_by_css_selector('form fieldset input')[1]
         emailInput.send_keys(self.username)
         passwordInput.send_keys(self.password)
         passwordInput.send_keys(Keys.ENTER)
 
-        time.sleep(5)
-        driver.get('https://www.reddit.com/' + sub + '/')
+        time.sleep(self.delay)
+        if sub != '':
+            driver.get('https://www.reddit.com/' + sub)
 
-        time.sleep(5)
+        time.sleep(self.delay)
         while True:
             links = driver.find_elements_by_css_selector('a')
             if self.loop_through_links(links) == False:
                 break
             driver.execute_script("window.scrollTo(0, document.body.scrollHeight)");
-            time.sleep(5)
+            time.sleep(self.delay)
 
-        for img in os.listdir('temp_images'):
-            shutil.copyfile('temp_images/' + img, 'images/' + img)
+        if self.find('temp_images', './'):
+            for img in os.listdir('temp_images'):
+                shutil.copyfile('temp_images/' + img, 'images/' + img)
+            shutil.rmtree('temp_images')
+
         driver.quit()
 
     def loop_through_links(self, links):

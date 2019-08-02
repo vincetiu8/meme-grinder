@@ -8,9 +8,10 @@ from PIL import Image
 import imagehash
 
 class Instagram_Bot():
-    def __init__(self, username, password):
+    def __init__(self, username, password, delay):
         self.username = username
         self.password = password
+        self.delay = delay
 
     def init_directory(self):
         if not os.path.isdir('./images'):
@@ -28,27 +29,29 @@ class Instagram_Bot():
         driver = webdriver.Chrome('D:/Vince/Documents/chromedriver.exe')
         driver.get('https://www.instagram.com/accounts/login/')
 
-        time.sleep(1.5)
+        time.sleep(self.delay)
         emailInput = driver.find_elements_by_css_selector('form input')[0]
         passwordInput = driver.find_elements_by_css_selector('form input')[1]
         emailInput.send_keys(self.username)
         passwordInput.send_keys(self.password)
         passwordInput.send_keys(Keys.ENTER)
 
-        time.sleep(3)
+        time.sleep(self.delay)
         notification = driver.find_elements_by_css_selector('div[role="presentation"] button')[1]
         notification.click()
 
-        time.sleep(1)
+        time.sleep(self.delay)
         while True:
             images = driver.find_elements_by_css_selector('article img')
             if self.loop_through_images(images) == False:
                 break
             driver.execute_script("window.scrollTo(0, document.body.scrollHeight)");
-            time.sleep(5)
+            time.sleep(self.delay)
 
-        for img in os.listdir('temp_images'):
-            shutil.copyfile('temp_images/' + img, 'images/' + img)
+        if self.find('temp_images', './'):
+            for img in os.listdir('temp_images'):
+                shutil.copyfile('temp_images/' + img, 'images/' + img)
+            shutil.rmtree('temp_images')
 
         driver.quit()
 
@@ -95,26 +98,26 @@ class Instagram_Page_Bot(Instagram_Bot):
         driver = webdriver.Chrome('D:/Vince/Documents/chromedriver.exe')
         driver.get('https://www.instagram.com/accounts/login/')
 
-        time.sleep(1)
+        time.sleep(self.delay)
         emailInput = driver.find_elements_by_css_selector('form input')[0]
         passwordInput = driver.find_elements_by_css_selector('form input')[1]
         emailInput.send_keys(self.username)
         passwordInput.send_keys(self.password)
         passwordInput.send_keys(Keys.ENTER)
 
-        time.sleep(2)
+        time.sleep(self.delay)
         driver.get('https://www.instagram.com/' + account + '/?hl=en')
 
-        time.sleep(2)
+        time.sleep(self.delay)
         driver.find_element_by_css_selector('article a').click()
 
         while True:
-            time.sleep(1)
+            time.sleep(self.delay)
             images = driver.find_elements_by_css_selector('article img')
             if self.loop_through_images(images) == False:
                 break
 
-            time.sleep(1)
+            time.sleep(self.delay)
             next = driver.find_element_by_xpath("//*[contains(text(), 'Next')]")
             next.click()
 
