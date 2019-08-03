@@ -72,47 +72,16 @@ class Instagram_Bot():
             autoit.control_click("[CLASS:#32770;TITLE:Open]", "Button1")
             time.sleep(self.delay)
 
-            for el in driver.find_elements_by_css_selector('header button'):
-                print(el.get_attribute('innerHTML'))
             next_button = driver.find_elements_by_css_selector('header button')[1]
             next_button.click()
             time.sleep(self.delay)
 
-            for el in driver.find_elements_by_css_selector('header button'):
-                print(el.get_attribute('innerHTML'))
             share_button = driver.find_elements_by_css_selector('header button')[1]
             share_button.click()
             os.remove('./memes_to_be_posted/' + os.listdir('memes_to_be_posted')[0])
             time.sleep(self.post_delay)
 
         driver.quit()
-
-    def loop_through_images(self, images):
-        for img in images:
-            if (
-                (
-                    img.get_attribute('alt').find('Image') != -1
-                    or img.get_attribute('alt').find('photo') != -1
-                )
-                and img.get_attribute('srcset').find('1080w') != -1
-            ):
-                url = img.get_attribute('src')
-                if self.download_image(url) == False:
-                    return False
-        return True
-
-    def download_image(self, url):
-        response = requests.get(url, stream = True)
-        i = Image.open(response.raw)
-        hash = str(imagehash.average_hash(i))
-        if self.find(hash, 'images'):
-            return False
-        if self.find(hash, 'temp_images'):
-            return True
-
-        i.save('temp_images/' + hash + '.png')
-        del response
-        return True
 
     def find(self, id, path):
         for filename in os.listdir(path):
