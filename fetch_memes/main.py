@@ -7,8 +7,8 @@ import shutil
 import os
 import ctypes
 
-reddit_bot = Reddit_Bot('invincbot', 'frenchfri', 5)
-insta_bot = Instagram_Bot('mustardmayonaiseketchup', 'frenchfri', 5)
+reddit_bot = Reddit_Bot('invincbot', 'Frenchfri365', 5)
+insta_bot = Instagram_Bot('mustardmayonaiseketchup', 'Frenchfri365', 5)
 
 def find(id, path):
     for filename in os.listdir(path):
