@@ -8,10 +8,11 @@ from PIL import Image
 import imagehash
 
 class Reddit_Bot():
-    def __init__(self, username, password, delay):
+    def __init__(self, username, password, delay, desired_size):
         self.username = username
         self.password = password
         self.delay = delay
+        self.desired_size = desired_size
 
     def load_hyperlinks(self, sub = ''):
         if not os.path.isdir('./images'):
@@ -74,16 +75,27 @@ class Reddit_Bot():
     def download_image(self, url):
         response = requests.get(url, stream = True)
         i = Image.open(response.raw)
-        hash = str(imagehash.average_hash(i))
+
+        old_size = i.size
+        if old_size[0] / 2 > old_size[1] or old_size[0] < old_size[1] / 2:
+            return True
+
+        ratio = float(self.desired_size)/max(old_size)
+        new_size = tuple([int(x*ratio) for x in old_size])
+        i = i.resize(new_size, Image.ANTIALIAS)
+
+        new_i = Image.new("RGB", (self.desired_size, self.desired_size))
+        new_i.paste(i, ((self.desired_size - new_size[0]) // 2, (self.desired_size - new_size[1]) // 2))
+
+        hash = str(imagehash.average_hash(new_i))
         if self.find(hash, 'images'):
             return False
         if self.find(hash, 'temp_images'):
             return True
 
-        i.save('temp_images/' + hash + '.png')
+        new_i.save('temp_images/' + hash + '.png')
         del response
         return True
-
 
     def find(self, id, path):
         for filename in os.listdir(path):
@@ -93,6 +105,5 @@ class Reddit_Bot():
         return False
 
 # For testing functionality
-# bot = Reddit_Bot('invincbot', 'frenchfri')
-# bot.init_directory()
-# bot.load_hyperlinks('r/dankmemes')
+bot = Reddit_Bot('invincbot', 'Frenchfri365', 5, 500)
+bot.load_hyperlinks('r/dankmemes')

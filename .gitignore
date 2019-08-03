@@ -1,6 +1,7 @@
 # Images
 fetch_memes/images
 fetch_memes/temp_images
+post_memes/memes_to_be_posted
 
 # Cache
 fetch_memes/__pycache__
