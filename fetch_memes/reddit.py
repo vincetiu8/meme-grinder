@@ -4,22 +4,29 @@ import shutil
 import os
 import time
 import requests
+import math
 from PIL import Image
 import imagehash
+import atexit
 
 class Reddit_Bot():
-    def __init__(self, username, password, delay, desired_size):
+    def __init__(self, username, password, delay, desired_size, hash_length):
         self.username = username
         self.password = password
         self.delay = delay
+        assert(desired_size > 0)
         self.desired_size = desired_size
+        assert(math.sqrt(hash_length).is_integer())
+        self.hash_size = int(math.sqrt(hash_length) * 2)
 
     def load_hyperlinks(self, sub = ''):
-        if not os.path.isdir('./images'):
+        if not self.find('images', './'):
             os.mkdir('./images')
 
-        if not os.path.isdir('./temp_images'):
+        if not self.find('temp_images', './'):
             os.mkdir('./temp_images')
+
+        atexit.register(self.move_memes)
 
         chrome_options = webdriver.ChromeOptions()
         chrome_options.add_experimental_option('prefs', {'profile.default_content_setting_values.notifications' : 2})
@@ -49,11 +56,7 @@ class Reddit_Bot():
             driver.execute_script("window.scrollTo(0, document.body.scrollHeight)");
             time.sleep(self.delay)
 
-        if self.find('temp_images', './'):
-            for img in os.listdir('temp_images'):
-                shutil.copyfile('temp_images/' + img, 'images/' + img)
-            shutil.rmtree('temp_images')
-
+        self.move_memes()
         driver.quit()
 
     def loop_through_links(self, links):
@@ -87,7 +90,7 @@ class Reddit_Bot():
         new_i = Image.new("RGB", (self.desired_size, self.desired_size))
         new_i.paste(i, ((self.desired_size - new_size[0]) // 2, (self.desired_size - new_size[1]) // 2))
 
-        hash = str(imagehash.average_hash(new_i))
+        hash = str(imagehash.phash(new_i, self.hash_size))
         if self.find(hash, 'images'):
             return False
         if self.find(hash, 'temp_images'):
@@ -97,6 +100,12 @@ class Reddit_Bot():
         del response
         return True
 
+    def move_memes(self):
+        if self.find('temp_images', './'):
+            for img in os.listdir('temp_images'):
+                shutil.copyfile('temp_images/' + img, 'images/' + img)
+            shutil.rmtree('temp_images')
+
     def find(self, id, path):
         for filename in os.listdir(path):
             if filename.startswith(id):
@@ -105,5 +114,5 @@ class Reddit_Bot():
         return False
 
 # For testing functionality
-bot = Reddit_Bot('invincbot', 'Frenchfri365', 5, 500)
-bot.load_hyperlinks('r/dankmemes')
+# bot = Reddit_Bot('invincbot', 'Frenchfri365', 5, 1024, 144)
+# bot.load_hyperlinks()

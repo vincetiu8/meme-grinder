@@ -4,29 +4,36 @@ import shutil
 import os
 import time
 import requests
+import math
 from PIL import Image
 import imagehash
+import atexit
 
 class Instagram_Bot():
-    def __init__(self, username, password, delay, desired_size):
+    def __init__(self, username, password, delay, desired_size, hash_length):
         self.username = username
         self.password = password
         self.delay = delay
+        assert(desired_size > 0)
         self.desired_size = desired_size
+        assert(math.sqrt(hash_length).is_integer())
+        self.hash_size = int(math.sqrt(hash_length) * 2)
 
     def load_hyperlinks(self):
-        if not os.path.isdir('./images'):
+        if not self.find('images', './'):
             os.mkdir('./images')
 
-        if not os.path.isdir('./temp_images'):
+        if not self.find('temp_images', './'):
             os.mkdir('./temp_images')
+
+        atexit.register(self.move_memes)
 
         chrome_options = webdriver.ChromeOptions()
         chrome_options.add_experimental_option('prefs', {'profile.default_content_setting_values.notifications' : 2})
         # For testing functionality
         # chrome_options.add_experimental_option("detach", True)
 
-        driver = webdriver.Chrome('D:/Vince/Documents/chromedriver.exe', chrome_option = chrome_options)
+        driver = webdriver.Chrome('D:/Vince/Documents/chromedriver.exe', chrome_options = chrome_options)
         driver.get('https://www.instagram.com/accounts/login/')
 
         time.sleep(self.delay)
@@ -37,10 +44,11 @@ class Instagram_Bot():
         passwordInput.send_keys(Keys.ENTER)
 
         time.sleep(self.delay)
-        notification = driver.find_elements_by_css_selector('div[role="presentation"] button')[1]
-        notification.click()
+        if len(driver.find_elements_by_css_selector('div[role="presentation"] button')) > 0:
+            notification = driver.find_elements_by_css_selector('div[role="presentation"] button')[1]
+            notification.click()
+            time.sleep(self.delay)
 
-        time.sleep(self.delay)
         while True:
             images = driver.find_elements_by_css_selector('article img')
             if self.loop_through_images(images) == False:
@@ -48,11 +56,7 @@ class Instagram_Bot():
             driver.execute_script("window.scrollTo(0, document.body.scrollHeight)");
             time.sleep(self.delay)
 
-        if self.find('temp_images', './'):
-            for img in os.listdir('temp_images'):
-                shutil.copyfile('temp_images/' + img, 'images/' + img)
-            shutil.rmtree('temp_images')
-
+        self.move_memes()
         driver.quit()
 
 
@@ -85,15 +89,28 @@ class Instagram_Bot():
         new_i = Image.new("RGB", (self.desired_size, self.desired_size))
         new_i.paste(i, ((self.desired_size - new_size[0]) // 2, (self.desired_size - new_size[1]) // 2))
 
-        hash = str(imagehash.average_hash(new_i))
+        hash = str(imagehash.phash(new_i, self.hash_size))
         if self.find(hash, 'images'):
             return False
         if self.find(hash, 'temp_images'):
             return True
 
-        new_i.save('temp_images/' + hash + '.png')
+        new_i.save('./temp_images/' + hash + '.png')
         del response
         return True
+
+    def move_memes(self):
+        if self.find('temp_images', './'):
+            for img in os.listdir('temp_images'):
+                shutil.copyfile('temp_images/' + img, 'images/' + img)
+            shutil.rmtree('temp_images')
+
+    def find(self, id, path):
+        for filename in os.listdir(path):
+            if filename.startswith(id):
+                return True
+
+        return False
 
 class Instagram_Page_Bot(Instagram_Bot):
     def load_hyperlinks(self, account):

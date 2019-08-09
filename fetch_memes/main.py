@@ -7,8 +7,8 @@ import shutil
 import os
 import ctypes
 
-reddit_bot = Reddit_Bot('invincbot', 'Frenchfri365', 5)
-insta_bot = Instagram_Bot('mustardmayonaiseketchup', 'Frenchfri365', 5)
+reddit_bot = Reddit_Bot('invincbot', 'Frenchfri365', 5, 1024, 144)
+insta_bot = Instagram_Bot('mustardmayonaiseketchup', 'Frenchfri365', 5, 1024, 144)
 
 def find(id, path):
     for filename in os.listdir(path):
@@ -30,9 +30,11 @@ if __name__ == '__main__':
     insta_process = multiprocessing.Process(target=insta_bot.load_hyperlinks)
     reddit_process.start()
     time.sleep(1)
+    print("@#@43")
     insta_process.start()
     time.sleep(3600)
 
+    print("@#@43")
     if (reddit_process.is_alive()):
         reddit_process.terminate()
     time.sleep(1)
