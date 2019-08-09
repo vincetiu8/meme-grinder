@@ -1,10 +1,10 @@
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
-import shutil
-import os
+from pathlib import PureWindowsPath, Path
 import time
 import requests
 import math
+import shutil
 from PIL import Image
 import imagehash
 import atexit
@@ -20,11 +20,13 @@ class Reddit_Bot():
         self.hash_size = int(math.sqrt(hash_length) * 2)
 
     def load_hyperlinks(self, sub = ''):
-        if not self.find('images', './'):
-            os.mkdir('./images')
+        self.img_path = Path('./images')
+        if not self.img_path.exists():
+            self.img_path.mkdir()
 
-        if not self.find('temp_images', './'):
-            os.mkdir('./temp_images')
+        self.temp_img_path = Path('./temp_images')
+        if not self.temp_img_path.exists():
+            self.temp_img_path.mkdir()
 
         atexit.register(self.move_memes)
 
@@ -91,9 +93,9 @@ class Reddit_Bot():
         new_i.paste(i, ((self.desired_size - new_size[0]) // 2, (self.desired_size - new_size[1]) // 2))
 
         hash = str(imagehash.phash(new_i, self.hash_size))
-        if self.find(hash, 'images'):
+        if self.find(self.img_path, hash, '.png'):
             return False
-        if self.find(hash, 'temp_images'):
+        if self.find(self.temp_img_path, hash, '.png'):
             return True
 
         new_i.save('temp_images/' + hash + '.png')
@@ -101,16 +103,15 @@ class Reddit_Bot():
         return True
 
     def move_memes(self):
-        if self.find('temp_images', './'):
-            for img in os.listdir('temp_images'):
-                shutil.copyfile('temp_images/' + img, 'images/' + img)
-            shutil.rmtree('temp_images')
+        if self.temp_img_path != None and self.temp_img_path.exists() == True:
+            for img in self.temp_img_path.glob('**/*.png'):
+                shutil.copyfile(img, PureWindowsPath(self.img_path, img.name))
+                img.unlink()
+            self.temp_img_path.rmdir()
 
-    def find(self, id, path):
-        for filename in os.listdir(path):
-            if filename.startswith(id):
-                return True
-
+    def find(self, path, id, type):
+        if len(list(path.glob('**/' + id + type))) > 0:
+            return True
         return False
 
 # For testing functionality

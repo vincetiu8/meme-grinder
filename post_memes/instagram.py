@@ -1,8 +1,7 @@
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
+from pathlib import PureWindowsPath, Path
 import shutil
-import ntpath
-import os
 import time
 import requests
 import autoit
@@ -15,8 +14,10 @@ class Instagram_Bot():
         self.post_delay = post_delay
 
     def post_memes(self):
-        if not ntpath.isdir('./memes_to_be_posted'):
+        self.img_path = Path('./memes_to_be_posted')
+        if not self.img_path.exists():
             return
+        print(self.img_path)
 
         chrome_options = webdriver.ChromeOptions()
         chrome_options.add_experimental_option('prefs', {'profile.default_content_setting_values.notifications' : 2})
@@ -60,15 +61,18 @@ class Instagram_Bot():
         notification.click()
         time.sleep(self.delay)
 
-        while len(os.listdir('memes_to_be_posted')) > 0:
+        for file in list(self.img_path.glob('**/*')):
             add_post = driver.find_element_by_css_selector('nav div[role="menuitem"]')
             add_post.click()
             time.sleep(self.delay)
 
             autoit.win_wait("[CLASS:#32770;TITLE:Open]", 20)
-            path = ntpath.realpath('./memes_to_be_posted/' + os.listdir('memes_to_be_posted')[0])
+            _path = str(file.absolute())
+            path = _path[:len(_path) - _path.find('D:')]
+            print(path)
             time.sleep(0.5)
             autoit.control_send("[CLASS:#32770;TITLE:Open]", "Edit1", path)
+            time.sleep(0.5)
             autoit.control_click("[CLASS:#32770;TITLE:Open]", "Button1")
             time.sleep(self.delay)
 
@@ -76,9 +80,11 @@ class Instagram_Bot():
             next_button.click()
             time.sleep(self.delay)
 
+            text_area = driver.find_elements_by_css_selector('textarea')[0]
+            text_area.send_keys('#dankmemes #dankmeme #memes #meme #memes2good #memesdaily #memesquad #memestagram #memeslayer #memesrlife #memes4days #memestgram #memess #memestar #memesdank #memesfordays #spicymemes #funny')
             share_button = driver.find_elements_by_css_selector('header button')[1]
             share_button.click()
-            os.remove('./memes_to_be_posted/' + os.listdir('memes_to_be_posted')[0])
+            file.unlink()
             time.sleep(self.post_delay)
 
         driver.quit()
@@ -90,5 +96,5 @@ class Instagram_Bot():
 
         return False
 
-bot = Instagram_Bot('mustardmayonaiseketchup@gmail.com', 'Frenchfri365', 5, 600)
+bot = Instagram_Bot('mustardmayonaiseketchup@gmail.com', 'Frenchfri365', 6, 1800)
 bot.post_memes()
