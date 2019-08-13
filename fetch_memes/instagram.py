@@ -1,34 +1,18 @@
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
-import shutil
+from utils.utils import make_dirs, move_memes, find, download_image
 import time
-import requests
-import math
-from PIL import Image
-import imagehash
-import atexit
-from pathlib import PureWindowsPath, Path
 
 class Instagram_Bot():
-    def __init__(self, username, password, delay, desired_size, hash_length):
+    def __init__(self, username, password, delay, desired_size, name_length):
         self.username = username
         self.password = password
         self.delay = delay
-        assert(desired_size > 0)
         self.desired_size = desired_size
-        assert(math.sqrt(hash_length).is_integer())
-        self.hash_size = int(math.sqrt(hash_length) * 2)
+        self.name_length = name_length
 
     def load_hyperlinks(self):
-        self.img_path = Path('./images')
-        if not self.img_path.exists():
-            self.img_path.mkdir()
-
-        self.temp_img_path = Path('./temp_images')
-        if not self.temp_img_path.exists():
-            self.temp_img_path.mkdir()
-
-        atexit.register(self.move_memes)
+        make_dirs(['images', 'temp_images'])
 
         chrome_options = webdriver.ChromeOptions()
         chrome_options.add_experimental_option('prefs', {'profile.default_content_setting_values.notifications' : 2})
@@ -53,7 +37,7 @@ class Instagram_Bot():
 
         while True:
             images = driver.find_elements_by_css_selector('article img')
-            if self.loop_through_images(images) == False:
+            if self.loop_through_links(images) == False:
                 break
             driver.execute_script("window.scrollTo(0, document.body.scrollHeight)");
             time.sleep(self.delay)
@@ -62,7 +46,7 @@ class Instagram_Bot():
         driver.quit()
 
 
-    def loop_through_images(self, images):
+    def loop_through_links(self, images):
         for img in images:
             if (
                 (
@@ -72,46 +56,9 @@ class Instagram_Bot():
                 and img.get_attribute('srcset').find('1080w') != -1
             ):
                 url = img.get_attribute('src')
-                if self.download_image(url) == False:
+                if download_image(url, self.desired_size, self.name_length) == False:
                     return False
         return True
-
-    def download_image(self, url):
-        response = requests.get(url, stream = True)
-        i = Image.open(response.raw)
-
-        old_size = i.size
-        if old_size[0] / 2 > old_size[1] or old_size[0] < old_size[1] / 2:
-            return True
-
-        ratio = float(self.desired_size)/max(old_size)
-        new_size = tuple([int(x*ratio) for x in old_size])
-        i = i.resize(new_size, Image.ANTIALIAS)
-
-        new_i = Image.new("RGB", (self.desired_size, self.desired_size))
-        new_i.paste(i, ((self.desired_size - new_size[0]) // 2, (self.desired_size - new_size[1]) // 2))
-
-        hash = str(imagehash.phash(new_i, self.hash_size))
-        if self.find(self.img_path, hash, '.png'):
-            return False
-        if self.find(self.temp_img_path, hash, '.png'):
-            return True
-
-        new_i.save('./temp_images/' + hash + '.png')
-        del response
-        return True
-
-    def move_memes(self):
-        if self.temp_img_path != None and self.temp_img_path.exists() == True:
-            for img in self.temp_img_path.glob('**/*.png'):
-                shutil.copyfile(img, PureWindowsPath(self.img_path, img.name))
-                img.unlink()
-            self.temp_img_path.rmdir()
-
-    def find(self, path, id, type):
-        if len(list(path.glob('**/' + id + type))) > 0:
-            return True
-        return False
 
 class Instagram_Page_Bot(Instagram_Bot):
     def load_hyperlinks(self, account):
@@ -138,7 +85,7 @@ class Instagram_Page_Bot(Instagram_Bot):
         while True:
             time.sleep(self.delay)
             images = driver.find_elements_by_css_selector('article img')
-            if self.loop_through_images(images) == False:
+            if self.loop_through_links(images) == False:
                 break
 
             time.sleep(self.delay)
@@ -148,5 +95,9 @@ class Instagram_Page_Bot(Instagram_Bot):
         driver.quit()
 
 # For testing functionality
-# bot = Instagram_Bot('mustardmayonaiseketchup', 'Frenchfri365', 5, 1024, 144)
-# bot.load_hyperlinks()
+# bot = Instagram_Bot('invincbot', 'Frenchfri365', 5, 1024, 144)
+# try:
+#     bot.load_hyperlinks()
+#
+# except KeyboardInterrupt:
+#     move_memes()
