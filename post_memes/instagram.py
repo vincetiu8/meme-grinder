@@ -57,7 +57,7 @@ class Instagram_Bot():
         # time.sleep(self.delay)
         # driver.find_element_by_css_selector('a').click()
 
-        notification = driver.find_elements_by_css_selector('div[role="presentation"] button')[2]
+        notification = driver.find_elements_by_css_selector('div[role="presentation"] button')[len(driver.find_elements_by_css_selector('div[role="presentation"] button')) - 1]
         notification.click()
         time.sleep(self.delay)
 
@@ -71,7 +71,7 @@ class Instagram_Bot():
             path = _path[:len(_path) - _path.find('D:')]
             print(path)
             time.sleep(0.5)
-            autoit.control_send("[CLASS:#32770;TITLE:Open]", "Edit1", path)
+            autoit.control_set_text("[CLASS:#32770;TITLE:Open]", "Edit1", path)
             time.sleep(0.5)
             autoit.control_click("[CLASS:#32770;TITLE:Open]", "Button1")
             time.sleep(self.delay)
